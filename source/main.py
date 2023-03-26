@@ -1,16 +1,7 @@
 import os
+from api.binance_api import get_actual_price, make_curl_request, makeWalletInfoRequest, get_all_open_binance_orders
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print(get_actual_price('BTCUSDT'))
+    print(make_curl_request())
+    #print(get_all_open_binance_orders())
