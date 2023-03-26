@@ -142,28 +142,6 @@ def make_direct_order(side, symbol, quantity):
     url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
     return requests.post(url, headers=header, timeout=30, verify=True)
 
-def get_limit_order(side, symbol, quantity, price):
-    """
-    :param side: 'BUY' or 'SELL'
-    :param symbol:  trading pair (e.g. 'BTCUSDT')
-    :param quantity: amount of coins during buy sell strategy
-    :param price: limit price
-    :return
-    :usage get_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
-    """
-    timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
-           "&side=" + side + \
-           "&type=LIMIT" + \
-           "&timeInForce=GTC" + \
-           "&quantity=" + str(quantity) + \
-           "&price=" + str(price) + \
-           "&timestamp=" + str(timestamp)
-    m = hmac.new(api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
-    header = {'X-MBX-APIKEY': api_key_spot}
-    url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
-    return requests.get(url, headers=header, timeout=30, verify=True)
-
 def make_limit_order(side, symbol, quantity, price):
     """
     :param side: 'BUY' or 'SELL'
