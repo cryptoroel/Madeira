@@ -42,7 +42,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_make_limit_order(self) -> str:
         req_make = make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
-        req_delete = delete_limit_order('BTCUSDT',str(req_make['orderId']))
+        req_delete = delete_limit_order('BTCUSDT', str(req_make['orderId']))
         self.assertTrue('orderId' in req_make)
         self.assertTrue('status' in req_delete)
         self.assertTrue(req_delete['status'] == 'CANCELED')
