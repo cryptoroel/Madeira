@@ -7,11 +7,15 @@ import time
 from datetime import datetime
 import pandas as pd
 from binance.client import Client
-api_key_ro = os.environ['BINANCE_READONLY_KEY']
-api_secret_ro = os.environ['BINANCE_READONLY_SECRET']
-api_key_spot = os.environ['BINANCE_SPOT_KEY']
-api_secret_spot = os.environ['BINANCE_SPOT_SECRET']
-client = Client(api_key_spot, api_secret_spot)
+from config import binance_keys
+#api_key_ro = os.environ['BINANCE_READONLY_KEY']
+#api_secret_ro = os.environ['BINANCE_READONLY_SECRET']
+#api_key_spot = os.environ['BINANCE_SPOT_KEY']
+#api_secret_spot = os.environ['BINANCE_SPOT_SECRET']
+#api_key_spot ='4kJzW9pOKMLz3FRSMLz86Pr9s5mA1I6qNgb5UxHNVX4ZvqiXo1Z5YLAd923n1ykW'
+#api_secret_spot ='MQlYhnvTvhTz5dYcYWUHFxyCaKx1hptfrYaOyHQhEjtpdI3tIY9pubVwegIAMGec'
+
+client = Client(binance_keys.api_key_spot, binance_keys.api_secret_spot)
 """
 Documentation for the Public Rest Api For Binance (2023-03-13)
 https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#public-rest-api-for-binance-2023-03-13
@@ -137,32 +141,10 @@ def make_direct_order(side, symbol, quantity):
              "&type=MARKET" + \
              "&quantity=" + str(quantity) + \
              "&timestamp=" + str(timestamp)
-    m = hmac.new(api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
-    header = {'X-MBX-APIKEY': api_key_spot}
+    m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
+    header = {'X-MBX-APIKEY': binance_keys.api_key_spot}
     url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
     return requests.post(url, headers=header, timeout=30, verify=True)
-
-def get_limit_order(side, symbol, quantity, price):
-    """
-    :param side: 'BUY' or 'SELL'
-    :param symbol:  trading pair (e.g. 'BTCUSDT')
-    :param quantity: amount of coins during buy sell strategy
-    :param price: limit price
-    :return
-    :usage get_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
-    """
-    timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
-           "&side=" + side + \
-           "&type=LIMIT" + \
-           "&timeInForce=GTC" + \
-           "&quantity=" + str(quantity) + \
-           "&price=" + str(price) + \
-           "&timestamp=" + str(timestamp)
-    m = hmac.new(api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
-    header = {'X-MBX-APIKEY': api_key_spot}
-    url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
-    return requests.get(url, headers=header, timeout=30, verify=True)
 
 def make_limit_order(side, symbol, quantity, price):
     """
@@ -181,8 +163,8 @@ def make_limit_order(side, symbol, quantity, price):
            "&quantity=" + str(quantity) + \
            "&price=" + str(price) + \
            "&timestamp=" + str(timestamp)
-    m = hmac.new(api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
-    header = {'X-MBX-APIKEY': api_key_spot}
+    m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
+    header = {'X-MBX-APIKEY': binance_keys.api_key_spot}
     url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
     return requests.post(url, headers=header, timeout=30, verify=True).json()
 
@@ -198,12 +180,10 @@ def delete_limit_order(symbol, orderId):
     queryS = "symbol=" + symbol + \
              "&orderId=" + orderId + \
              "&timestamp=" + str(timestamp)
-    m = hmac.new(api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
-    header = {'X-MBX-APIKEY': api_key_spot}
+    m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
+    header = {'X-MBX-APIKEY': binance_keys.api_key_spot}
     url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
     return requests.delete(url, headers=header, timeout=30, verify=True).json()
-
-
 
 def make_wallet_info_request(symbol):
   """
