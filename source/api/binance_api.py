@@ -4,16 +4,10 @@ import hmac
 import hashlib
 import requests
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import pandas as pd
 from binance.client import Client
 from config import binance_keys
-#api_key_ro = os.environ['BINANCE_READONLY_KEY']
-#api_secret_ro = os.environ['BINANCE_READONLY_SECRET']
-#api_key_spot = os.environ['BINANCE_SPOT_KEY']
-#api_secret_spot = os.environ['BINANCE_SPOT_SECRET']
-#api_key_spot ='4kJzW9pOKMLz3FRSMLz86Pr9s5mA1I6qNgb5UxHNVX4ZvqiXo1Z5YLAd923n1ykW'
-#api_secret_spot ='MQlYhnvTvhTz5dYcYWUHFxyCaKx1hptfrYaOyHQhEjtpdI3tIY9pubVwegIAMGec'
 
 client = Client(binance_keys.api_key_spot, binance_keys.api_secret_spot)
 """
@@ -69,6 +63,10 @@ def get_clock_difference_local_vs_binance() -> float:
   delta_time_ms = abs(int(time.time() * 1000) - client.get_server_time()['serverTime'])
   return delta_time_ms
 
+def get_earliest_timestamp_available(symbol, interval) -> int:
+    timestamp = client._get_earliest_valid_timestamp(symbol, interval)
+    return timestamp
+
 def get_human_time(binance_time):
     """
     :param binance_time: int like 1679594421000
@@ -97,16 +95,19 @@ def get_klines(symbol,interval, **kwargs):
                         "0"                 // Unused field, ignore.
                         ] ]
   :usage: get_klines('BTCUSDT','1h')
-          get_klines('BTCUSDT','1h',start='2023-01-01 00:00:00)
+          get_klines('BTCUSDT','1h',start='2023-01-01 00:00:00')
+          get_klines('BTCUSDT','1h',start='2023-01-01 00:00:00',limit=1000)
   """
   queryS = "symbol=" + symbol + "&interval=" + interval
   if 'start' in kwargs.keys():
     queryS = queryS + "&startTime=" + str(get_binance_time(kwargs['start']))
+  if 'limit' in kwargs.keys():
+    queryS = queryS + "&limit=" + str(kwargs['limit'])
 
   url = 'https://api.binance.com/api/v3/klines'+'?'+queryS
   return json.loads((requests.get(url)).text)
 
-def get_klines_df(symbol,interval):
+def get_klines_df(symbol,interval, **kwargs):
     """
     :param    symbol: string reflecting the coin pair (e.g. 'BTCUSDT')
             interval: time length of one candle (e.g. '1h')
@@ -117,11 +118,12 @@ def get_klines_df(symbol,interval):
             ['open', 'high', 'low', 'close', 'volume', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol']
             index is human readable time string
     :usage: get_klines_df('BTCUSDT','1h')
-            get_klines_df('BTCUSDT','1h',start='2023-01-01 00:00:00)
+            get_klines_df('BTCUSDT','1h',start='2023-01-01 00:00:00')
+            get_klines_df('BTCUSDT','1h',start='2023-01-01 00:00:00',limit=1000)
     """
     columns = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'qav',
                'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore']
-    data = pd.DataFrame(get_klines(symbol, interval), columns=columns, dtype=float)
+    data = pd.DataFrame(get_klines(symbol, interval, **kwargs), columns=columns, dtype=float)
     data.index = [pd.to_datetime(x, unit='ms').strftime('%Y-%m-%d %H:%M:%S') for x in data.open_time]
     usecols = ['open', 'high', 'low', 'close', 'volume', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol']
     data = data[usecols]
@@ -132,7 +134,29 @@ def make_direct_order(side, symbol, quantity):
     :param side: 'BUY' or 'SELL'
     :param symbol:  trading pair (e.g. 'BTCUSDT')
     :param quantity: amount of coins during buy sell strategy
-    :return
+    :return {
+        'symbol': 'BTCUSDT',
+        'orderId': 20645482185,
+        'orderListId': -1,
+        'clientOrderId': 'F4wDT10iZqr2wbcLQ1m6Ov',
+        'transactTime': 1680094744518,
+        'price': '0.00000000',
+        'origQty': '0.02000000',
+        'executedQty': '0.02000000',
+        'cummulativeQuoteQty': '569.06000000',
+        'status': 'FILLED',
+        'timeInForce': 'GTC',
+        'type': 'MARKET',
+        'side': 'SELL',
+        'workingTime': 1680094744518,
+        'fills': [{
+            'price': '28453.00000000',
+            'qty': '0.02000000',
+            'commission': '0.00134890',
+            'commissionAsset': 'BNB',
+            'tradeId': 3062655169
+            }],
+        'selfTradePreventionMode': 'NONE'}
     :usage makeOrder('BUY', 'BTCUSDT', 0.02)
     """
     timestamp = int(round(time.time() * 1000))
@@ -144,7 +168,7 @@ def make_direct_order(side, symbol, quantity):
     m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
     header = {'X-MBX-APIKEY': binance_keys.api_key_spot}
     url = 'https://api.binance.com/api/v3/order' + '?' + queryS + '&signature=' + m.hexdigest()
-    return requests.post(url, headers=header, timeout=30, verify=True)
+    return requests.post(url, headers=header, timeout=30, verify=True).json()
 
 def make_limit_order(side, symbol, quantity, price):
     """

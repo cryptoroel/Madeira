@@ -1,9 +1,11 @@
 import unittest
 from api.binance_api import get_actual_price, get_binance_time, get_clock_difference_local_vs_binance, get_human_time, \
-    get_all_open_binance_orders, get_klines, make_wallet_info_request, make_limit_order, delete_limit_order
+    get_all_open_binance_orders, get_klines, make_wallet_info_request, make_limit_order, delete_limit_order,\
+    make_direct_order
 
 
 class MyTestCase(unittest.TestCase):
+
 
     def test_get_actual_price(self) -> None:
         price_dict = get_actual_price('BTCUSDT')
@@ -40,12 +42,18 @@ class MyTestCase(unittest.TestCase):
         mwir = make_wallet_info_request('BTC')
         self.assertTrue(type(mwir) is dict)
 
+    @unittest.skip("demonstrating skipping")
     def test_make_limit_order(self) -> str:
         req_make = make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
         req_delete = delete_limit_order('BTCUSDT', str(req_make['orderId']))
         self.assertTrue('orderId' in req_make)
         self.assertTrue('status' in req_delete)
         self.assertTrue(req_delete['status'] == 'CANCELED')
+
+    @unittest.skip("demonstrating skipping")
+    def test_make_direct_sell_order(self) -> str:
+        req_make = make_direct_order('SELL', 'BTCUSDT', 0.02)
+        self.assertTrue('orderId' in req_make)
 
 if __name__ == '__main__':
     unittest.main()
