@@ -441,7 +441,7 @@ def check_trend(v_min, v_max, v_list, trend, out_put, **kwargs):
   #i_loop = kwargs['i_loop']
 
   v_full_list = v_list
-  split_at = 1000
+  split_at = 500
   if len(v_full_list) > split_at:
     # split in n parts of 1000
     n_parts = int(len(v_full_list) / split_at)
@@ -469,8 +469,8 @@ def check_trend(v_min, v_max, v_list, trend, out_put, **kwargs):
 def check_trend_on_subpart(v_min, v_max, v_list, trend, out_put, tolerance=100, i_loop=1):
   if len(v_list) > 0:
     v = v_list.popleft()
-    # print("i:{:4d}, {:.2f}, v-v_min condition {} >{} or v-v_max {} <-{}".format(i_loop, v, (v - v_min), tolerance,
-    #                                                                           (v - v_max), tolerance))
+    #print("i:{:4d}, {:.2f}, v-v_min condition {} >{} or v-v_max {} <-{}".format(
+    #  i_loop, v, (v - v_min), tolerance, (v - v_max), tolerance))
     v_min, v_max, trend = update_trend(v_min, v_max, v, trend, tolerance)
     out_put.append(trend)
     # print("Iter: {:4d}: Trend={}".format(i_loop, trend))
