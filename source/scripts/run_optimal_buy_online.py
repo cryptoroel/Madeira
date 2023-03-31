@@ -31,22 +31,24 @@ if __name__ == "__main__":
     coin_dict_initial = {'out_dir': out_dir,  # path to output
                          'filename_out': f"auto_trade_auto_buy_{symbol}",
                          'symbol': symbol,  # e.g 'BTCUSDT'
-                         'tolerance': 150,  # tolerance value to change the trend up <-> down expressed in USDT
+                         'tolerance': 50,  # tolerance value to change the trend up <-> down expressed in USDT
                          'current_trend': -1,  # initial trend 1 means up trend, sell during next down trend
-                         'max_buy_price': 26600.0,
+                         'max_buy_price': 26500.0,
                          'max_buy_price_reached': 0,  # Flag to see if the min_sell_price is reached (1) or not (0)
                          'manual_price_input': 0,  # Flag for testing (feeding the price with console inputs)
                          'print_precision': 5,  # number of digits after comma
                          'action_flag': 'IDLE',  # this flag will move between 'idle', 'buy' and 'sell'
                          'filled_flag': 0,  # this flag indicates if the one time sell has been performed or not
-                         'static_transaction_amount': 0.025}  # the amount of coins during buy and sell strategy
+                         'static_transaction_amount': 0.1}  # the amount of coins during buy and sell strategy
 
     create_debug_observing_files(coin_dict_initial)
     coin_dict = state_machine_auto_trade(coin_dict_initial)
 
     if coin_dict['max_buy_price_reached'] and coin_dict['action_flag'] == 'buy' and coin_dict['filled_flag'] == 0:
         walletInfoBeforeBuy = make_wallet_info_request('USDT')
-        #make_direct_order('BUY', coin_dict_initial['symbol'], coin_dict_initial['static_transaction_amount'])
+
+        # Next line is doing the BUY on the binance platform, (comment for testing purposes)
+        make_direct_order('BUY', coin_dict_initial['symbol'], coin_dict_initial['static_transaction_amount'])
         time.sleep(5)
         walletInfoAfterBuy = make_wallet_info_request('USDT')
         write_buy_sell_summary_file(coin_dict_initial, coin_dict['action_flag'], walletInfoBeforeBuy,
