@@ -217,6 +217,18 @@ def make_wallet_info_request(symbol):
    """
   return client.get_asset_balance(symbol)
 
-
+def make_wallet_info_order_history(symbol):
+    """
+    :param symbol:  trading pair (e.g. 'BTCUSDT')
+    :return
+    :usage make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
+    """
+    timestamp = int(round(time.time() * 1000))
+    queryS = "symbol=" + symbol + \
+           "&timestamp=" + str(timestamp)
+    m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
+    header = {'X-MBX-APIKEY': binance_keys.api_key_spot}
+    url = 'https://api.binance.com/api/v3/allOrders' + '?' + queryS + '&signature=' + m.hexdigest()
+    return requests.get(url, headers=header, timeout=30, verify=True).json()
 
 
