@@ -80,7 +80,7 @@ def find_best_tolerance_value(trade_config, df):
 
 if __name__ == "__main__":
     ''' Trend analysis  run on the offline data_collection data.'''
-    trade_config ={'last_x_days': 30, 'coin': 'BTCUSDT', 'interval': '1h'}
+    trade_config ={'last_x_days': 2, 'coin': 'BTCUSDT', 'interval': '1m'}
     df = get_data_from_binance(trade_config)
     # getting the best tolerance value (grid search)
     best_tol = find_best_tolerance_value(trade_config, df)
