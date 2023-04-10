@@ -7,14 +7,14 @@ from automatic_trading.tools import create_debug_observing_files, state_machine_
 from api.binance_api import make_wallet_info_request
 if __name__ == "__main__":
     out_dir = path.join(path.dirname(path.abspath(__file__)), '..', 'outputs', 'automatic_trade')
-    symbol = 'BTCUSDT'
+    symbol = 'BTC/USDT'
 
     # Initial coin dictionary containing all the parameters needed for the automatic trading
     coin_dict_initial = {'out_dir': out_dir,  # path to output
-                      'filename_out': f"03_auto_trade_{symbol}",
+                      'filename_out': f"03_auto_trade_{symbol.replace('/','')}",
                       # filname of the json containing state machine info
-                      'symbol': symbol,  # e.g 'BTCUSDT'
-                      'tolerance': 18.6,  # tolerance value to change the trend up <-> down expressed in USDT
+                      'symbol': symbol,  # e.g 'BTC/USDT'
+                      'tolerance': 150,  # tolerance value to change the trend up <-> down expressed in USDT
                       'mav': 1,  # moving average taken over 5 measurements
                       'current_trend': 0,  # initial trend -1 means down trend, first buy during next up trend
                       'manual_price_input': 0,

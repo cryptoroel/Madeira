@@ -8,7 +8,7 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_get_actual_price(self) -> None:
-        price_dict = get_actual_price('BTCUSDT')
+        price_dict = get_actual_price('BTC/USDT')
         self.assertTrue('symbol' in price_dict)
         self.assertTrue('price' in price_dict)
 
@@ -35,7 +35,7 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(time == '2023-03-23 18:00:21')
 
     def test_get_klines(self) -> None:
-        kls = get_klines('BTCUSDT', '1h')
+        kls = get_klines('BTC/USDT', '1h')
         self.assertTrue(len(kls) > 3)
 
     def test_make_wallet_info_request(self) -> None:
@@ -44,15 +44,15 @@ class MyTestCase(unittest.TestCase):
 
     @unittest.skip("demonstrating skipping")
     def test_make_limit_order(self) -> str:
-        req_make = make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
-        req_delete = delete_limit_order('BTCUSDT', str(req_make['orderId']))
+        req_make = make_limit_order('BUY', 'BTC/USDT', 0.02, 10000)
+        req_delete = delete_limit_order('BTC/USDT', str(req_make['orderId']))
         self.assertTrue('orderId' in req_make)
         self.assertTrue('status' in req_delete)
         self.assertTrue(req_delete['status'] == 'CANCELED')
 
     @unittest.skip("demonstrating skipping")
     def test_make_direct_sell_order(self) -> str:
-        req_make = make_direct_order('SELL', 'BTCUSDT', 0.02)
+        req_make = make_direct_order('SELL', 'BTC/USDT', 0.02)
         self.assertTrue('orderId' in req_make)
 
 if __name__ == '__main__':

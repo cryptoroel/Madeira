@@ -19,11 +19,12 @@ def delete_debug_observing_files(coin_dict):
 
 
 def create_debug_observing_files(coin_dict):
+
   initial_usdt_in_wallet = make_wallet_info_request('USDT')
   initial_btc_in_wallet = make_wallet_info_request('BTC')
   usdt_in_wallet = float(initial_usdt_in_wallet['free'])+float(initial_usdt_in_wallet['locked'])
   btc_in_wallet = float(initial_btc_in_wallet['free'])+float(initial_btc_in_wallet['locked'])
-  btc_now_in_usdt = float(get_actual_price('BTCUSDT')['price'])
+  btc_now_in_usdt = float(get_actual_price('BTC/USDT')['price'])
   out_dir = coin_dict['out_dir']
 
   if not os.path.exists(out_dir):
@@ -33,13 +34,13 @@ def create_debug_observing_files(coin_dict):
   # purpose
   if not os.path.isfile(os.path.join(out_dir, coin_dict['filename_out']+'.log')):
     with open(os.path.join(out_dir, coin_dict['filename_out']+'.log'), 'w') as f:
-      print(f"Automatic trading on {coin_dict['symbol']}.log" \
+      print(f"Automatic trading on {coin_dict['symbol'].replace('/','')}.log" \
             f"\n++++++++++++++++++++++++++++", file=f)
 
   # File written with only the Buy-Sell information at effective buy-sell time  (the real stuff)
   if not os.path.isfile(os.path.join(out_dir, f"{coin_dict['filename_out']}_reality.log")):
     with open(os.path.join(out_dir, f"{coin_dict['filename_out']}_reality.log"), 'w') as f:
-      print(f"Automatic trading on {coin_dict['symbol']}"
+      print(f"Automatic trading on {coin_dict['symbol'].replace('/','')}"
             f"\n++++++++++++++++++++++++++++"
             f"\nINITIAL USDT amount in Binance wallet: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             f"\nFREE USDT: {initial_usdt_in_wallet['free']}"
@@ -419,7 +420,7 @@ def make_swing_trade_plot(df, balance, buy_sell_tpl, trade_config):
   if not os.path.exists(dir_out):
     os.makedirs(dir_out)
   plt.savefig(os.path.join(dir_out, '{}_last-{}d_interval-{}_optimal_threshold_.png'.format(
-    trade_config['coin'],
+    trade_config['coin'].replace('/',''),
     str(trade_config['last_x_days']),
     trade_config['interval'])))
 
