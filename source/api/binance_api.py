@@ -21,7 +21,7 @@ def get_actual_price(symbol):
   :usage: get_actual_price('BTCUSDT')
   :return: dictionary like {'symbol': 'BTCUSDT', 'price': '15665.06000000'}
   """
-  queryS = "symbol=" + symbol
+  queryS = "symbol=" + symbol.replace('/','')
   url = 'https://api.binance.com/api/v3/ticker/price' + '?' + queryS
   return json.loads((requests.get(url)).text)
 
@@ -64,7 +64,7 @@ def get_clock_difference_local_vs_binance() -> float:
   return delta_time_ms
 
 def get_earliest_timestamp_available(symbol, interval) -> int:
-    timestamp = client._get_earliest_valid_timestamp(symbol, interval)
+    timestamp = client._get_earliest_valid_timestamp(symbol.replace('/',''), interval)
     return timestamp
 
 def get_human_time(binance_time):
@@ -98,7 +98,7 @@ def get_klines(symbol,interval, **kwargs):
           get_klines('BTCUSDT','1h',start='2023-01-01 00:00:00')
           get_klines('BTCUSDT','1h',start='2023-01-01 00:00:00',limit=1000)
   """
-  queryS = "symbol=" + symbol + "&interval=" + interval
+  queryS = "symbol=" + symbol.replace('/', '') + "&interval=" + interval
   if 'start' in kwargs.keys():
     queryS = queryS + "&startTime=" + str(get_binance_time(kwargs['start']))
   if 'limit' in kwargs.keys():
@@ -132,7 +132,7 @@ def get_klines_df(symbol,interval, **kwargs):
 def make_direct_order(side, symbol, quantity):
     """
     :param side: 'BUY' or 'SELL'
-    :param symbol:  trading pair (e.g. 'BTCUSDT')
+    :param symbol:  trading pair (e.g. 'BTC/USDT')
     :param quantity: amount of coins during buy sell strategy
     :return {
         'symbol': 'BTCUSDT',
@@ -160,7 +160,7 @@ def make_direct_order(side, symbol, quantity):
     :usage makeOrder('BUY', 'BTCUSDT', 0.02)
     """
     timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
+    queryS = "symbol=" + symbol.replace('/', '') + \
              "&side=" + side + \
              "&type=MARKET" + \
              "&quantity=" + str(quantity) + \
@@ -173,14 +173,14 @@ def make_direct_order(side, symbol, quantity):
 def make_limit_order(side, symbol, quantity, price):
     """
     :param side: 'BUY' or 'SELL'
-    :param symbol:  trading pair (e.g. 'BTCUSDT')
+    :param symbol:  trading pair (e.g. 'BTC/USDT')
     :param quantity: amount of coins during buy sell strategy
     :param price: limit price
     :return
     :usage make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
     """
     timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
+    queryS = "symbol=" + symbol.replace('/', '') + \
            "&side=" + side + \
            "&type=LIMIT" + \
            "&timeInForce=GTC" + \
@@ -201,7 +201,7 @@ def delete_limit_order(symbol, orderId):
     :usage delete_limit_order('BTCUSDT', 20604255324)
     """
     timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
+    queryS = "symbol=" + symbol.replace('/', '') + \
              "&orderId=" + orderId + \
              "&timestamp=" + str(timestamp)
     m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
@@ -219,12 +219,12 @@ def make_wallet_info_request(symbol):
 
 def make_wallet_info_order_history(symbol):
     """
-    :param symbol:  trading pair (e.g. 'BTCUSDT')
+    :param symbol:  trading pair (e.g. 'BTC/USDT')
     :return
     :usage make_limit_order('BUY', 'BTCUSDT', 0.02, 10000)
     """
     timestamp = int(round(time.time() * 1000))
-    queryS = "symbol=" + symbol + \
+    queryS = "symbol=" + symbol.replace('/', '') + \
            "&timestamp=" + str(timestamp)
     m = hmac.new(binance_keys.api_secret_spot.encode('utf-8'), queryS.encode('utf-8'), hashlib.sha256)
     header = {'X-MBX-APIKEY': binance_keys.api_key_spot}

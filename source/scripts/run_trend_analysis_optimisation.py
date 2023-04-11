@@ -15,7 +15,7 @@ from api.aggregations import extract_binance_data
 
 
 def get_data_from_binance(trade_config):
-    symbol = trade_config['coin']
+    symbol = trade_config['coin'].replace('/','')
     interval = trade_config['interval']
     last_x_days = trade_config['last_x_days']
     my_df = extract_binance_data(symbol, interval, last_x_days)
@@ -70,7 +70,7 @@ def find_best_tolerance_value(trade_config, df):
         if not os.path.exists(dir_out):
             os.makedirs(dir_out)
         plt.savefig(os.path.join(dir_out, '{}_last-{}d_interval-{}_tolerance_optimisation_.png'.format(
-            trade_config['coin'],
+            trade_config['coin'].replace('/',''),
             str(trade_config['last_x_days']),
             trade_config['interval'])))
 
@@ -80,7 +80,7 @@ def find_best_tolerance_value(trade_config, df):
 
 if __name__ == "__main__":
     ''' Trend analysis  run on the offline data_collection data.'''
-    trade_config ={'last_x_days': 30, 'coin': 'BTCUSDT', 'interval': '1h'}
+    trade_config ={'last_x_days': 4, 'coin': 'BTC/USDT', 'interval': '1m'}
     df = get_data_from_binance(trade_config)
     # getting the best tolerance value (grid search)
     best_tol = find_best_tolerance_value(trade_config, df)

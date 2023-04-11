@@ -19,11 +19,12 @@ def delete_debug_observing_files(coin_dict):
 
 
 def create_debug_observing_files(coin_dict):
+
   initial_usdt_in_wallet = make_wallet_info_request('USDT')
   initial_btc_in_wallet = make_wallet_info_request('BTC')
   usdt_in_wallet = float(initial_usdt_in_wallet['free'])+float(initial_usdt_in_wallet['locked'])
   btc_in_wallet = float(initial_btc_in_wallet['free'])+float(initial_btc_in_wallet['locked'])
-  btc_now_in_usdt = float(get_actual_price('BTCUSDT')['price'])
+  btc_now_in_usdt = float(get_actual_price('BTC/USDT')['price'])
   out_dir = coin_dict['out_dir']
 
   if not os.path.exists(out_dir):
@@ -33,13 +34,13 @@ def create_debug_observing_files(coin_dict):
   # purpose
   if not os.path.isfile(os.path.join(out_dir, coin_dict['filename_out']+'.log')):
     with open(os.path.join(out_dir, coin_dict['filename_out']+'.log'), 'w') as f:
-      print(f"Automatic trading on {coin_dict['symbol']}.log" \
+      print(f"Automatic trading on {coin_dict['symbol'].replace('/','')}.log" \
             f"\n++++++++++++++++++++++++++++", file=f)
 
   # File written with only the Buy-Sell information at effective buy-sell time  (the real stuff)
-  if not os.path.isfile(os.path.join(out_dir, f"reality_{coin_dict['filename_out']}.log")):
-    with open(os.path.join(out_dir, f"reality_{coin_dict['filename_out']}.log"), 'w') as f:
-      print(f"Automatic trading on {coin_dict['symbol']}"
+  if not os.path.isfile(os.path.join(out_dir, f"{coin_dict['filename_out']}_reality.log")):
+    with open(os.path.join(out_dir, f"{coin_dict['filename_out']}_reality.log"), 'w') as f:
+      print(f"Automatic trading on {coin_dict['symbol'].replace('/','')}"
             f"\n++++++++++++++++++++++++++++"
             f"\nINITIAL USDT amount in Binance wallet: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             f"\nFREE USDT: {initial_usdt_in_wallet['free']}"
@@ -161,11 +162,14 @@ def state_machine_auto_trade_update(coin_dict):
   auto_trade_file = os.path.join(coin_dict['out_dir'], coin_dict['filename_out']+'.json')
   with open(auto_trade_file) as json_file:
     coin_dict = json.load(json_file)
+
+  # 'manual_price_input" is a flag to be set on 1, when you want to simulate the price (based on user keyboard input)
   if coin_dict['manual_price_input'] == 1:
     actual_price = float(input('Price value: '))
+
+  # getting the single actual price value from the exchange API and pop the left element of the v_stack and add new
+  # price at the end of the stack
   else:
-    # getting the single actual price value from the exchange API and pop the left element of the v_stack and add new
-    # price at the end of the stack
     request = get_actual_price(coin_dict['symbol'])
     actual_price = float(request['price'])
   coin_dict['v_stack'] = update_my_v_stack(coin_dict['v_stack'], actual_price)
@@ -186,8 +190,10 @@ def state_machine_auto_trade_update(coin_dict):
     coin_dict['sell_price'] = current_ma_price
     if 'cumm_gain' in coin_dict:
       coin_dict['cumm_gain'] = coin_dict['cumm_gain'] + current_ma_price - coin_dict['buy_price']
-    else:
+    elif 'buy_price' in coin_dict:
       coin_dict['cumm_gain'] = current_ma_price - coin_dict['buy_price']
+    else:
+      coin_dict['cumm_gain'] = 0
   elif (coin_dict['current_trend'] == -1) & (trend_update == 1):
     coin_dict['action_flag'] = 'buy'
     coin_dict['buy_price'] = current_ma_price
@@ -211,8 +217,8 @@ def state_machine_auto_trade_update(coin_dict):
         print(f"{now}, "
             f"Price={actual_price:.{precision}f}, "
             #f"MA{coin_dict['mav']}Price={current_ma_price:.{precision}f}, "
-            f"v_min={v_min_update:.{precision}f}, "
-            f"v_max={v_max_update:.{precision}f}, "
+            f"v_min=({v_min_update:.{precision}f},{actual_price-v_min_update:.{precision}f}), "
+            f"v_max=({v_max_update:.{precision}f},{v_max_update-actual_price:.{precision}f}), "
             f"trend={trend_update:>2}, "
             f"action={coin_dict['action_flag']:>4}, "
             f"min_sell_price_reached={coin_dict['min_sell_price_reached']}, "
@@ -221,11 +227,20 @@ def state_machine_auto_trade_update(coin_dict):
         print(f"{now}, "
             f"Price={actual_price:.{precision}f}, "
             #f"MA{coin_dict['mav']}Price={current_ma_price:.{precision}f}, "
-            f"v_min={v_min_update:.{precision}f}, "
-            f"v_max={v_max_update:.{precision}f}, "
+            f"v_min=({v_min_update:.{precision}f},{actual_price-v_min_update:.{precision}f}), "
+            f"v_max=({v_max_update:.{precision}f},{v_max_update-actual_price:.{precision}f}), "
             f"trend={trend_update:>2}, "
             f"action={coin_dict['action_flag']:>4}, "
             f"max_buy_price_reached={coin_dict['max_buy_price_reached']}, "
+            f"v_stack={coin_dict['v_stack']}", file=f)
+      else:
+        print(f"{now}, "
+            f"Price={actual_price:.{precision}f}, "
+            #f"MA{coin_dict['mav']}Price={current_ma_price:.{precision}f}, "
+            f"v_min=({v_min_update:.{precision}f},{actual_price-v_min_update:.{precision}f}), "
+            f"v_max=({v_max_update:.{precision}f},{v_max_update-actual_price:.{precision}f}), "
+            f"trend={trend_update:>2}, "
+            f"action={coin_dict['action_flag']:>4}, "
             f"v_stack={coin_dict['v_stack']}", file=f)
   return coin_dict
 
@@ -405,7 +420,7 @@ def make_swing_trade_plot(df, balance, buy_sell_tpl, trade_config):
   if not os.path.exists(dir_out):
     os.makedirs(dir_out)
   plt.savefig(os.path.join(dir_out, '{}_last-{}d_interval-{}_optimal_threshold_.png'.format(
-    trade_config['coin'],
+    trade_config['coin'].replace('/',''),
     str(trade_config['last_x_days']),
     trade_config['interval'])))
 
@@ -479,4 +494,24 @@ def check_trend_on_subpart(v_min, v_max, v_list, trend, out_put, tolerance=100, 
   else:
     # print("End of the recursive process")
     return v_min, v_max, trend
+
+def write_buy_sell_summary_file(coin_dict, walletInfoBefore, walletInfoAfter):
+  now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  coins = coin_dict['static_transaction_amount']
+  action_string = coin_dict['action_flag']
+  pp = coin_dict['print_precision']
+
+  if 'buy_price' in coin_dict:
+    buy_price = coin_dict['buy_price']*coins
+
+  if 'sell_price' in coin_dict:
+    sell_price = coin_dict['sell_price']*coins
+
+  with open(os.path.join(coin_dict['out_dir'], f"{coin_dict['filename_out']}_reality.log"), 'a') as f:
+    if action_string == 'sell':
+      actual_sell_price = (float(walletInfoAfter['free']) - float(walletInfoBefore['free'])) / coins
+      print(f"{now}, USDT after SELL action: (req, exec)= ( {sell_price:.{pp}f}, {actual_sell_price:.{pp}f})", file=f)
+    elif action_string == 'buy':
+      actual_buy_price = (float(walletInfoBefore['free'])-float(walletInfoAfter['free'])) / coins
+      print(f"{now}, USDT after BUY  action: (req, exec)= ( {buy_price:.{pp}f}, {actual_buy_price:.{pp}f})", file=f)
 

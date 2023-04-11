@@ -9,7 +9,7 @@ from api.binance_api import get_actual_price
 
 if __name__ == "__main__":
 
-  coins_to_get_price_from = ['BTCUSDT', 'ETHUSDT', 'MATICUSDT', 'MANAUSDT']
+  coins_to_get_price_from = ['BTC/USDT', 'ETH/USDT', 'MATIC/USDT', 'MANA/USDT']
   data_collection_fname = '/home/rheremans/Repos/CryptoMadeira/source/outputs/data_collection/coins_pro_min_data'
   now = datetime.today()
   coin_price_dict = {}
